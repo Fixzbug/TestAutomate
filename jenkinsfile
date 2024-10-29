@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REPO_URL = 'https://github.com/your-repo.git'  
+        REPO_URL = 'https://github.com/Fixzbug/TestAutomate.git'  
         BRANCH = 'master' 
         RESULTS_DIR = 'results' 
     }
@@ -10,24 +10,22 @@ pipeline {
     stages {
         stage('Checkout Code From Git') {
             steps {
-                // ดึงโค้ดจาก Git repository
                 git branch: "${BRANCH}", url: "${REPO_URL}"
             }
         }
         
         stage('Run Test Automate') {
             steps {
-                // รันคำสั่งทดสอบ เช่น Robot Framework หรือคำสั่งอื่นๆ
+                // robot -T -d D:/TestAutomate/Testcase/SIT/ -L trace -d D:/TestAutomate/results/login/ D:/TestAutomate/Testcase/SIT/login.robot
                 sh """
                     mkdir -p ${RESULTS_DIR}
-                    robot --outputdir ${RESULTS_DIR} tests/  // รันการทดสอบอัตโนมัติในโฟลเดอร์ tests
+                    robot --outputdir ${RESULTS_DIR} Testcase/
                 """
             }
         }
         
         stage('Send Result To Jenkins') {
             steps {
-                // ส่งผลลัพธ์การทดสอบกลับไปที่ Jenkins
                 robot outputPath: "${RESULTS_DIR}"
             }
         }
@@ -35,9 +33,7 @@ pipeline {
 
     post {
         always {
-            // เก็บผลลัพธ์การทดสอบเป็น artifacts ทุกครั้งที่ pipeline รัน
             archiveArtifacts artifacts: "${RESULTS_DIR}/*.xml", allowEmptyArchive: true
-            // ทำความสะอาดโฟลเดอร์ผลลัพธ์หลังจากเสร็จสิ้นการทำงาน
             deleteDir()
         }
     }
