@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    environment {
+        REPO_URL = 'https://github.com/your-repo.git'  
+        BRANCH = 'master' 
+        RESULTS_DIR = 'results' 
+    }
+
+    stages {
+        stage('Checkout Code From Git') {
+            steps {
+                // ดึงโค้ดจาก Git repository
+                git branch: "${BRANCH}", url: "${REPO_URL}"
+            }
+        }
+        
+        stage('Run Test Automate') {
+            steps {
+                // รันคำสั่งทดสอบ เช่น Robot Framework หรือคำสั่งอื่นๆ
+                sh """
+                    mkdir -p ${RESULTS_DIR}
+                    robot --outputdir ${RESULTS_DIR} tests/  // รันการทดสอบอัตโนมัติในโฟลเดอร์ tests
+                """
+            }
+        }
+        
+        stage('Send Result To Jenkins') {
+            steps {
+                // ส่งผลลัพธ์การทดสอบกลับไปที่ Jenkins
+                robot outputPath: "${RESULTS_DIR}"
+            }
+        }
+    }
+
+    post {
+        always {
+            // เก็บผลลัพธ์การทดสอบเป็น artifacts ทุกครั้งที่ pipeline รัน
+            archiveArtifacts artifacts: "${RESULTS_DIR}/*.xml", allowEmptyArchive: true
+            // ทำความสะอาดโฟลเดอร์ผลลัพธ์หลังจากเสร็จสิ้นการทำงาน
+            deleteDir()
+        }
+    }
+}
